@@ -1,0 +1,8 @@
+venv/
+exl3lib/
+wheels/
+model/
+model-vl/
+cache/
+__pycache__/
+*.pyc
