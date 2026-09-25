@@ -21,16 +21,20 @@ included here.
 | `exl3_serve.py` | Launcher: applies the OrcaSAQ2 int8-embedding patch, registers the MTP head for the text-only class, then runs the OpenAI server in-process. |
 | `tools/serve_openai.py` | OpenAI-compatible server (`/v1/models`, `/health`, `/v1/chat/completions` — streaming, tool calling, vision). |
 | `OrcaSAQ2-kernel/` | The serving kernels: the int8-embedding patch (`orcasaq2/patches/int8_embedding.py`) plus the vLLM plugin and presets (kept for reference). |
-| `setup.bat` | One-time setup: builds the venv, fetches the exllamav3 1.5.1 wheel, downloads the model. |
+| `setup.bat` | One-time setup: builds the venv, fetches the exllamav3 1.5.1 wheel, downloads the model, and (if the vision tower is present) builds the vision model. |
+| `download_vision.bat` | Build the vision model (`model-vl`) from the text model + the shipped vision tower. |
 | `start_exl3.bat` | Start the server (edit the knobs at the top). |
 | `stop_exl3.bat` | Stop the server and free VRAM. |
 | `bench.py` | Measure decode speed of the running server. |
+| `vision/` | The EXL3-quantized Qwen3.8-27B vision tower (`vision.safetensors`, ~0.57 GB, via git-lfs) plus the VL `config.json` and safetensors index. |
 
 ## Requirements
 
-* Windows with an NVIDIA GPU (validated on an **RTX A4500, 20 GB**).
-* **git** and **uv** on PATH (setup installs uv via pip if it is missing).
-* ~12.3 GB free for the model, ~2 GB for the exllamav3 wheel.
+* **Windows 10/11** (all scripts are `.bat`; validated on Windows 11).
+* An NVIDIA GPU (validated on an **RTX A4500, 20 GB**).
+* **git** and **git-lfs** on PATH (git-lfs carries the vision tower).
+* **uv** on PATH (setup installs it via pip if it is missing).
+* ~12.3 GB free for the model, ~2 GB for the exllamav3 wheel, ~0.6 GB for the vision tower.
 
 ## Setup (one time)
 
@@ -45,11 +49,32 @@ This:
    into `.\wheels` and unpacks it into `.\exl3lib`.
 3. Downloads the text model `orcarouter/OrcaSAQ-2-27B` into `.\model` (12.3 GB,
    resumes if interrupted).
+4. If the vision tower is present in `.\vision`, builds the vision model into
+   `.\model-vl` (calls `download_vision.bat`).
 
-> **Vision is a local build, not a single HF repo.** `model-vl` = the text model plus
-> the EXL3-quantized Qwen3.8-27B vision tower (`vision.safetensors`, ~0.57 GB, 987
-> trellis tensors). It is not downloaded by `setup.bat`. If you don't have it, set
-> `VISION=0` in `start_exl3.bat` and run text-only from `.\model`.
+> **Cloning with the vision tower.** The tower is stored with git-lfs. Clone with
+> `git lfs install` then `git clone <url>` (or `git lfs pull` after a plain clone).
+> Without it, `setup.bat` skips vision and you run text-only (`VISION=0`).
+
+## Vision (optional)
+
+The vision model is **not a single HF repo**: it is the OrcaSAQ2 text model plus the
+EXL3-quantized Qwen3.8-27B vision tower (987 trellis tensors, ~0.57 GB), which was
+quantized locally with exllamav3's `convert_vision.py` + `transplant_vision.py`. This
+repo ships the tower and the two VL config files under `.\vision`, so you can rebuild
+the vision model on any machine:
+
+```bat
+download_vision.bat
+```
+
+This downloads the text model into `.\model-vl` (12.3 GB) and overlays the three
+VL-specific files from `.\vision` — `config.json` (multimodal arch),
+`model.safetensors.index.json` (maps the 987 vision tensors), and
+`vision.safetensors` (the tower). The four text shards are byte-identical to the HF
+text model, so only the tower and these two files are shipped.
+
+To run **text-only** instead, set `VISION=0` in `start_exl3.bat` and use `.\model`.
 
 ## Run
 

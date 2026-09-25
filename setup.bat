@@ -45,11 +45,13 @@ if not exist "%ROOT%\model\config.json" (
 echo.
 echo [4/4] Vision model (optional)
 rem  model-vl = the text model plus the EXL3-quantized Qwen3.8-27B vision tower
-rem  (vision.safetensors, ~0.57 GB). It is a local build, not a single HF repo, so
-rem  it is not downloaded here. If you do not have it, set VISION=0 in start_exl3.bat
-rem  and run text-only from .\model.
-if not exist "%ROOT%\model-vl\config.json" (
-  echo   model-vl not found - text-only mode (VISION=0) will be used.
+rem  (vision.safetensors, ~0.57 GB, shipped in .\vision via git-lfs).
+if not exist "%ROOT%\vision\vision.safetensors" (
+  echo   vision\vision.safetensors missing - if you cloned without LFS run: git lfs pull
+  echo   (or set VISION=0 in start_exl3.bat for text-only)
+) else if not exist "%ROOT%\model-vl\vision.safetensors" (
+  call "%ROOT%\download_vision.bat"
+  if errorlevel 1 goto :fail
 ) else (echo   already present)
 
 echo.
