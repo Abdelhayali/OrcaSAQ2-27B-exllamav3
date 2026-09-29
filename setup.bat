@@ -20,7 +20,7 @@ where uv >nul 2>&1 || (echo uv not found - installing it via pip... & pip instal
 echo.
 echo [1/4] Python 3.13 venv
 if not exist "%PY%" (
-  uv venv --python 3.13 "%VENV" || goto :fail
+  uv venv --clear --python 3.13 "%VENV%" || goto :fail
   uv pip install --python "%PY%" --index-url https://download.pytorch.org/whl/cu128 "torch==2.10.0" || goto :fail
   uv pip install --python "%PY%" transformers==5.17.0 aiohttp pillow safetensors rich blessed prompt_toolkit pydantic requests huggingface_hub || goto :fail
 ) else (echo   already present)
