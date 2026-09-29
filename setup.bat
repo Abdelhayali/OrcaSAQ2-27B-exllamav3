@@ -46,13 +46,17 @@ echo.
 echo [4/4] Vision model (optional)
 rem  model-vl = the text model plus the EXL3-quantized Qwen3.8-27B vision tower
 rem  (vision.safetensors, ~0.57 GB, shipped in .\vision via git-lfs).
-if not exist "%ROOT%\vision\vision.safetensors" (
-  echo   vision\vision.safetensors missing - if you cloned without LFS run: git lfs pull
-  echo   (or set VISION=0 in start_exl3.bat for text-only)
-) else if not exist "%ROOT%\model-vl\vision.safetensors" (
+rem  No parentheses inside the echo lines below: in a ( ) block, a ")" in the text
+rem  closes the block early and scrambles the else branches.
+if exist "%ROOT%\model-vl\vision.safetensors" (
+  echo   already present
+) else if exist "%ROOT%\vision\vision.safetensors" (
   call "%ROOT%\download_vision.bat"
   if errorlevel 1 goto :fail
-) else (echo   already present)
+) else (
+  echo   vision\vision.safetensors missing - if you cloned without LFS run: git lfs pull
+  echo   or set VISION=0 in start_exl3.bat for text-only
+)
 
 echo.
 echo Setup complete. Edit the settings at the top of start_exl3.bat, then run it.
