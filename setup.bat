@@ -24,6 +24,10 @@ if not exist "%PY%" (
   uv pip install --python "%PY%" --index-url https://download.pytorch.org/whl/cu128 "torch==2.10.0" || goto :fail
   uv pip install --python "%PY%" transformers==5.17.0 aiohttp pillow safetensors rich blessed prompt_toolkit pydantic requests huggingface_hub || goto :fail
 ) else (echo   already present)
+rem  exllamav3's own requirements. The wheel is unpacked rather than pip-installed,
+rem  so nothing pulls these in automatically; run every time so older venvs catch up.
+rem  Versions match the known-good D:\qwen38-dflash2 venv.
+uv pip install --python "%PY%" triton-windows==3.8.0.post28 ninja==1.13.2 marisa-trie==1.4.1 llguidance==1.8.0 pyyaml typing_extensions || goto :fail
 
 echo.
 echo [2/4] exllamav3 1.5.1 wheel
